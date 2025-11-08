@@ -43,5 +43,5 @@ jobs:
           firefox --version
 
       - name: Run Maven tests with headless Firefox
-        run: mvn clean test -Dselenide.browser=firefox -Dselenide.headless=true
+        run: mvn clean test -Dheadless=true -Dselenide.browser=firefox
 
