@@ -1,6 +1,6 @@
 package api.entities;
 
-import PowerShellcom.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EmployeeResponse {
