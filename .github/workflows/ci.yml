@@ -25,6 +25,9 @@ jobs:
       - name: Install Firefox
         run: sudo apt-get update && sudo apt-get install -y firefox
 
+      - name: Install dependencies for geckodriver
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Install Geckodriver
         run: |
           GECKO_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | jq -r .tag_name)
@@ -34,5 +37,4 @@ jobs:
           geckodriver --version
 
       - name: Build with Maven
-        run: mvn clean test
-
+        run: mvn clean test -Dselenide.browser=firefox -Dselenide.headless=true
