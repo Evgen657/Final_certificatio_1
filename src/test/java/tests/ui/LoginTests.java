@@ -22,16 +22,17 @@ public class LoginTests {
 
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            // Windows — здесь можно указать жёстко путь к Firefox
+            // Локально Windows — можно указать путь к firefox
             options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
             Configuration.headless = false;
         } else {
-            // Linux — не указывайте binary, иначе возникнет ошибка!
+            // Linux (CI) — НЕ указывайте binary, чтобы selenium нашёл firefox автоматически
             Configuration.headless = true;
         }
 
         Configuration.browserCapabilities = options;
     }
+
 
 
     @AfterEach
