@@ -2,11 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    branches: [master]
 
 jobs:
   build:
@@ -24,14 +22,12 @@ jobs:
 
       - name: Remove snap Firefox and install official Firefox
         run: |
-          # Удаляем snap-версию Firefox (если есть)
           sudo snap remove firefox || true
-          # Добавляем PPA с актуальной версией Firefox
           sudo add-apt-repository -y ppa:mozillateam/ppa
           sudo apt-get update
           sudo apt-get install -y firefox
 
-      - name: Install dependencies jq and unzip (если нужны)
+      - name: Install dependencies jq and unzip
         run: sudo apt-get install -y jq unzip
 
       - name: Install Geckodriver
@@ -42,6 +38,10 @@ jobs:
           sudo mv geckodriver /usr/local/bin/
           geckodriver --version
 
-      - name: Build with Maven and run tests with Firefox in headless mode
-        run: mvn clean test -Dselenide.browser=firefox -Dselenide.headless=true
+      - name: Verify Firefox installation
+        run: |
+          which firefox
+          firefox --version
 
+      - name: Run Maven tests with headless Firefox
+        run: mvn clean test -Dselenide.browser=firefox -Dselenide.headless=true
