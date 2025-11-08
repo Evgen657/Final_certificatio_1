@@ -22,11 +22,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Firefox
-        run: sudo apt-get update && sudo apt-get install -y firefox
+      - name: Remove snap Firefox and install official Firefox
+        run: |
+          # Удаляем snap-версию Firefox (если есть)
+          sudo snap remove firefox || true
+          # Добавляем PPA с актуальной версией Firefox
+          sudo add-apt-repository -y ppa:mozillateam/ppa
+          sudo apt-get update
+          sudo apt-get install -y firefox
 
-      - name: Install dependencies for geckodriver
-        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Install dependencies jq and unzip (если нужны)
+        run: sudo apt-get install -y jq unzip
 
       - name: Install Geckodriver
         run: |
@@ -36,5 +42,6 @@ jobs:
           sudo mv geckodriver /usr/local/bin/
           geckodriver --version
 
-      - name: Build with Maven
+      - name: Build with Maven and run tests with Firefox in headless mode
         run: mvn clean test -Dselenide.browser=firefox -Dselenide.headless=true
+
