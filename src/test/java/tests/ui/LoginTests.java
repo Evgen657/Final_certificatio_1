@@ -9,28 +9,34 @@ import tests.ui.pageobjects.LoginPage;
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static io.qameta.allure.Allure.step;
 
-
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class LoginTests {
 
     @BeforeAll
     static void setup() {
         Configuration.browser = "firefox";
-        Configuration.browserSize = "1920x1080"; // можно вручную масштабировать окно, "1920x1080"
+        Configuration.browserSize = "1920x1080";
         Configuration.timeout = 5000;
 
         FirefoxOptions options = new FirefoxOptions();
-        options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
-        Configuration.browserCapabilities = options;
 
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("win")) {
+            // Локальная Windows — можно явно указать путь к Firefox, если нужно
+            options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
+            Configuration.headless = false;
+        } else {
+            // Linux (CI) — не указываем бинарник, запускаем в headless
+            Configuration.headless = true;
+        }
+
+        Configuration.browserCapabilities = options;
     }
 
     @AfterEach
     void tearDown() {
         closeWebDriver();
     }
-
-
 
     @Test
     @Order(1)
@@ -39,7 +45,7 @@ public class LoginTests {
     @Description("Проверка успешного входа с валидными данными standard_user")
     @Tags({@Tag("позитивный"), @Tag("авторизация")})
     public void successfulLogin() {
-        Allure.step("Открыть страницу логина и войти", () ->
+        step("Открыть страницу логина и войти", () ->
                 new LoginPage().openPage().login("standard_user", "secret_sauce"));
     }
 
@@ -51,7 +57,7 @@ public class LoginTests {
     @Tags({@Tag("негативный"), @Tag("авторизация")})
     public void lockedOutUserLogin() {
         LoginPage loginPage = new LoginPage().openPage();
-        Allure.step("Попытка входа заблокированным пользователем", () ->
+        step("Попытка входа заблокированным пользователем", () ->
                 loginPage.login("locked_out_user", "secret_sauce"));
 
         step("Проверка сообщения об ошибке", () ->

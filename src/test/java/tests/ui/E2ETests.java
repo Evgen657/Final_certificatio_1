@@ -25,7 +25,17 @@ public class E2ETests {
         Configuration.timeout = 5000;
 
         FirefoxOptions options = new FirefoxOptions();
-        options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
+
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("win")) {
+            // Локальная Windows — можно явно указать путь к Firefox, если нужно
+            options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
+            Configuration.headless = false;
+        } else {
+            // Linux (например, CI) — не указываем бинарник, запускаем в headless
+            Configuration.headless = true;
+        }
+
         Configuration.browserCapabilities = options;
     }
 
@@ -94,4 +104,5 @@ public class E2ETests {
         checkoutComplete.checkCompletionMessage("THANK YOU FOR YOUR ORDER");
     }
 }
+
 
