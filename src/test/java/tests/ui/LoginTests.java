@@ -21,16 +21,15 @@ public class LoginTests {
         FirefoxOptions options = new FirefoxOptions();
 
         String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            // Локально Windows — можно указать путь к firefox
+        Configuration.headless = Boolean.parseBoolean(System.getProperty("headless", os.contains("linux") ? "true" : "false"));
+
+        if (os.contains("win") && !Configuration.headless) {
             options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
-            Configuration.headless = false;
-        } else {
-            // Linux (CI) — НЕ указывайте binary, чтобы selenium нашёл firefox автоматически
-            Configuration.headless = true;
         }
 
         Configuration.browserCapabilities = options;
+
+        System.out.println("Headless mode: " + Configuration.headless);
     }
 
 
