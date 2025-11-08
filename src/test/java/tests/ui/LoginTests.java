@@ -20,13 +20,13 @@ public class LoginTests {
 
         FirefoxOptions options = new FirefoxOptions();
 
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.contains("win")) {
-            // Локальная Windows — можно явно указать путь к Firefox, если нужно
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            // Локально Windows, можно ставить бинарник (если нужно)
             options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
             Configuration.headless = false;
         } else {
-            // Linux (CI) — не указываем бинарник, запускаем в headless
+            // На Linux не указываем путь к бинарю, чтобы selenium сам нашёл браузер
             Configuration.headless = true;
         }
 
