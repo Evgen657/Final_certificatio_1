@@ -20,25 +20,28 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install stable Chrome browser
+      - name: Install dependencies and Google Chrome
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip curl
+          sudo apt-get install -y wget unzip curl jq
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
           rm google-chrome-stable_current_amd64.deb
           google-chrome --version
 
-      - name: Install stable ChromeDriver
+      - name: Install ChromeDriver matching Chrome version
         run: |
-          CHROMEDRIVER_VERSION="117.0.5938.62"
-          wget https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
+          MAJOR_VERSION=$(google-chrome --version | grep -oP '\d+' | head -1)
+          echo "Chrome major version: $MAJOR_VERSION"
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$MAJOR_VERSION")
+          echo "Latest ChromeDriver version: $CHROMEDRIVER_VERSION"
+          wget "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/
           rm chromedriver_linux64.zip
           chromedriver --version
 
-      - name: Run tests with Maven and headless Chrome
+      - name: Run Maven tests with headless Chrome
         run: mvn clean test -Dselenide.browser=chrome -Dselenide.headless=true
 
       - name: Upload Allure test results
