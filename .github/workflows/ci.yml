@@ -20,28 +20,28 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Remove snap Firefox and install official Firefox with dependencies
+      - name: Install dependencies for Chrome and test tools
         run: |
-          sudo snap remove firefox || true
-          sudo add-apt-repository -y ppa:mozillateam/ppa
           sudo apt-get update
-          sudo apt-get install -y firefox jq unzip
-          sudo apt-get clean
+          sudo apt-get install -y wget unzip curl
+          # Установка Google Chrome stable
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
+          rm google-chrome-stable_current_amd64.deb
 
-      - name: Install Geckodriver
+      - name: Install ChromeDriver
         run: |
-          GECKO_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | jq -r .tag_name)
-          wget https://github.com/mozilla/geckodriver/releases/download/$GECKO_VERSION/geckodriver-$GECKO_VERSION-linux64.tar.gz
-          tar -xzf geckodriver-$GECKO_VERSION-linux64.tar.gz
-          sudo mv geckodriver /usr/local/bin/
-          geckodriver --version
+          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+          wget https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          rm chromedriver_linux64.zip
+          chromedriver --version
 
-      - name: Verify Firefox executable
+      - name: Run Maven build and tests
+        run: mvn clean install -DskipTests
+      - name: Run tests with Allure
         run: |
-          which firefox
-          file $(which firefox)
-          firefox --version
-
-      - name: Run Maven tests with headless Firefox
-        run: mvn clean test -Dheadless=true -Dselenide.browser=firefox
-
+          mvn test -Dselenide.browser=chrome -Dselenide.headless=true
+          echo "=== Checking test results ==="
+          find target/ -name "*.json" -o -name "*.xml" 2>/dev/null | head -10
