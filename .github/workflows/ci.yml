@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up JDK 17
@@ -29,28 +29,25 @@ jobs:
           sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
           rm google-chrome-stable_current_amd64.deb
 
-      - name: Get Chrome version and install matching ChromeDriver
+      - name: Install ChromeDriver matching Chrome version
         run: |
           CHROME_VERSION_FULL=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
           echo "Chrome full version: $CHROME_VERSION_FULL"
-          # Получаем major.minor.patch
-          CHROME_VERSION=$(echo "$CHROME_VERSION_FULL" | cut -d. -f1-3)
+          CHROME_VERSION=$(echo "$CHROME_VERSION_FULL" | cut -d '.' -f1-3)
           echo "Using Chrome version: $CHROME_VERSION"
-          # Получаем номер последнего релиза chromedriver для версии Chrome
           LATEST_DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}")
           echo "Latest chromedriver version: $LATEST_DRIVER_VERSION"
-          # Скачиваем и распаковываем chromedriver
           wget -N "https://chromedriver.storage.googleapis.com/${LATEST_DRIVER_VERSION}/chromedriver_linux64.zip"
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/
           rm chromedriver_linux64.zip
           chromedriver --version
 
-      - name: Run tests with Maven
+      - name: Run Maven tests with headless Chrome
         run: mvn clean test -Dselenide.browser=chrome -Dselenide.headless=true
 
       - name: Upload Allure test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: target/allure-results
