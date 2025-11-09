@@ -29,15 +29,13 @@ jobs:
           rm google-chrome-stable_current_amd64.deb
           google-chrome --version
 
-      - name: Install ChromeDriver matching Chrome version
+      - name: Install ChromeDriver version 100.0.4896.60
         run: |
-          MAJOR_VERSION=$(google-chrome --version | grep -oP '\d+' | head -1)
-          echo "Chrome major version: $MAJOR_VERSION"
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$MAJOR_VERSION")
-          echo "Latest ChromeDriver version: $CHROMEDRIVER_VERSION"
+          CHROMEDRIVER_VERSION=100.0.4896.60
           wget "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
           rm chromedriver_linux64.zip
           chromedriver --version
 
