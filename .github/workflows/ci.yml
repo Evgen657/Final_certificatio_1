@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,30 +17,38 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
-      - name: Remove snap Firefox and install official Firefox with dependencies
+      - name: Install dependencies and Google Chrome
         run: |
-          sudo snap remove firefox || true
-          sudo add-apt-repository -y ppa:mozillateam/ppa
           sudo apt-get update
-          sudo apt-get install -y firefox jq unzip
-          sudo apt-get clean
+          sudo apt-get install -y wget unzip curl jq
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
+          rm google-chrome-stable_current_amd64.deb
+          google-chrome --version
 
-      - name: Install Geckodriver
+      - name: Install ChromeDriver
         run: |
-          GECKO_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | jq -r .tag_name)
-          wget https://github.com/mozilla/geckodriver/releases/download/$GECKO_VERSION/geckodriver-$GECKO_VERSION-linux64.tar.gz
-          tar -xzf geckodriver-$GECKO_VERSION-linux64.tar.gz
-          sudo mv geckodriver /usr/local/bin/
-          geckodriver --version
+          CHROME_VERSION_FULL=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+          CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION_FULL" | cut -d '.' -f1)
+          LATEST_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION})
+          wget -N "https://chromedriver.storage.googleapis.com/${LATEST_DRIVER_VERSION}/chromedriver_linux64.zip"
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          rm chromedriver_linux64.zip
+          chromedriver --version
 
-      - name: Verify Firefox executable
+      - name: Run tests with Maven
+        run: mvn clean test -Dselenide.browser=chrome -Dselenide.headless=true -Dallure.results.directory=target/allure-results
+
+      - name: Generate Allure report
         run: |
-          which firefox
-          file $(which firefox)
-          firefox --version
+          mvn allure:report
 
-      - name: Run Maven tests with headless Firefox
-        run: mvn clean test -Dselenide.browser=firefox -Dselenide.headless=true
+      - name: Upload Allure report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: target/site/allure-maven-plugin
