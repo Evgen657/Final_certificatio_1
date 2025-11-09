@@ -45,3 +45,19 @@ jobs:
       - name: Run Maven tests with headless Firefox
         run: mvn clean test -Dheadless=true -Dselenide.browser=firefox
 
+      - name: Install Allure Commandline
+        run: |
+          ALLURE_VERSION=2.13.9
+          wget https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip
+          unzip allure-${ALLURE_VERSION}.zip -d $HOME/
+          echo "$HOME/allure-${ALLURE_VERSION}/bin" >> $GITHUB_PATH
+
+      - name: Generate Allure Report
+        run: |
+          allure generate target/allure-results --clean -o target/allure-report
+
+      - name: Upload Allure Report Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: target/allure-report
