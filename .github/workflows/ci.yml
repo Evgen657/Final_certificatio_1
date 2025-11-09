@@ -17,33 +17,55 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Install dependencies and Google Chrome
+      - name: Remove snap Firefox and install official Firefox with dependencies
         run: |
+          sudo snap remove firefox || true
+          sudo add-apt-repository -y ppa:mozillateam/ppa
           sudo apt-get update
-          sudo apt-get install -y wget unzip curl jq
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
-          rm google-chrome-stable_current_amd64.deb
-          google-chrome --version
+          sudo apt-get install -y firefox jq unzip
+          sudo apt-get clean
 
-      - name: Install ChromeDriver version 100.0.4896.60
+      - name: Install Geckodriver
         run: |
-          CHROMEDRIVER_VERSION=100.0.4896.60
-          wget "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/
-          sudo chmod +x /usr/local/bin/chromedriver
-          rm chromedriver_linux64.zip
-          chromedriver --version
+          GECKO_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | jq -r .tag_name)
+          wget https://github.com/mozilla/geckodriver/releases/download/$GECKO_VERSION/geckodriver-$GECKO_VERSION-linux64.tar.gz
+          tar -xzf geckodriver-$GECKO_VERSION-linux64.tar.gz
+          sudo mv geckodriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/geckodriver
+          geckodriver --version
 
-      - name: Run Maven tests with headless Chrome
-        run: mvn clean test -Dselenide.browser=chrome -Dselenide.headless=true
+      - name: Verify Firefox executable
+        run: |
+          which firefox
+          file $(which firefox)
+          firefox --version
+
+      - name: Run Maven tests with headless Firefox
+        run: mvn clean test -Dselenide.browser=firefox -Dselenide.headless=true
+
+      - name: Install Allure Commandline
+        run: |
+          ALLURE_VERSION=2.20.1
+          wget -qO allure.zip https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip
+          unzip -q allure.zip -d allure
+          rm allure.zip
+          chmod +x allure/bin/allure
+
+      - name: Generate Allure report
+        run: |
+          ./allure/bin/allure generate target/allure-results --clean -o target/allure-report
 
       - name: Upload Allure test results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: target/allure-results
+
+      - name: Upload Allure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: target/allure-report
