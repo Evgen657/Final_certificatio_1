@@ -1,9 +1,10 @@
 package tests.ui;
 
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.logevents.SelenideLogger;
+import io.qameta.allure.selenide.AllureSelenide;
 import io.qameta.allure.*;
 import org.junit.jupiter.api.*;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import tests.ui.pageobjects.LoginPage;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
@@ -12,30 +13,23 @@ import static io.qameta.allure.Allure.step;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class LoginTests {
 
-    @BeforeAll
-    static void setup() {
-        Configuration.browser = "firefox";
-        Configuration.browserSize = "1920x1080";
-        Configuration.timeout = 5000;
+    @BeforeEach
+    public void setUp() {
+        SelenideLogger.addListener("AllureSelenide", new AllureSelenide()
+                .screenshots(true)
+                .savePageSource(true)
+                .includeSelenideSteps(true)
+        );
 
-        FirefoxOptions options = new FirefoxOptions();
-
-        String os = System.getProperty("os.name").toLowerCase();
-        Configuration.headless = Boolean.parseBoolean(System.getProperty("headless", os.contains("linux") ? "true" : "false"));
-
-        if (os.contains("win") && !Configuration.headless) {
-            options.setBinary("C:/Program Files/Mozilla Firefox/firefox.exe");
-        }
-
-        Configuration.browserCapabilities = options;
-
-        System.out.println("Headless mode: " + Configuration.headless);
+        Configuration.browser = "chrome";
+        Configuration.timeout = 10000;
+        Configuration.browserSize = "1280x1024";
+        Configuration.browserPosition = "1600x0";
+        Configuration.headless = true;
     }
 
-
-
     @AfterEach
-    void tearDown() {
+    public void tearDown() {
         closeWebDriver();
     }
 
