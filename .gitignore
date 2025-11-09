@@ -3,8 +3,7 @@
 *.iml
 Thumbs.db
 *.log
-*.env
-*.properties
+
 /target/allure-results/
 /target/allure-report/
 
