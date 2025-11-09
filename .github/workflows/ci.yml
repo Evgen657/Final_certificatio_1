@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,35 +20,29 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install dependencies and Google Chrome
+      - name: Install stable Chrome browser
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip curl jq
+          sudo apt-get install -y wget unzip curl
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
           rm google-chrome-stable_current_amd64.deb
           google-chrome --version
 
-      - name: Install ChromeDriver
+      - name: Install stable ChromeDriver
         run: |
-          CHROME_VERSION_FULL=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
-          CHROME_MAJOR_VERSION=$(echo "$CHROME_VERSION_FULL" | cut -d '.' -f1)
-          LATEST_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION})
-          wget -N "https://chromedriver.storage.googleapis.com/${LATEST_DRIVER_VERSION}/chromedriver_linux64.zip"
+          CHROMEDRIVER_VERSION="117.0.5938.62"
+          wget https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/
           rm chromedriver_linux64.zip
           chromedriver --version
 
-      - name: Run tests with Maven
-        run: mvn clean test -Dselenide.browser=chrome -Dselenide.headless=true -Dallure.results.directory=target/allure-results
+      - name: Run tests with Maven and headless Chrome
+        run: mvn clean test -Dselenide.browser=chrome -Dselenide.headless=true
 
-      - name: Generate Allure report
-        run: |
-          mvn allure:report
-
-      - name: Upload Allure report artifact
+      - name: Upload Allure test results
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
-          path: target/site/allure-maven-plugin
+          name: allure-results
+          path: target/allure-results
